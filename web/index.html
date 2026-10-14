@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>朝鲜族音乐 · 网页版</title>
+<style>
+  :root{
+    --bg:#14100d; --bg2:#1c1713; --surface:#241e19; --surface2:#2e2721;
+    --line:rgba(240,228,208,.10); --line2:rgba(240,228,208,.18);
+    --text:#f2e8d8; --muted:#a79781; --faint:#6f6254;
+    --gold:#d9a85e; --red:#c8503c; --blue:#3d6f9e; --green:#5a8a5e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text); font:14px/1.6 "Microsoft YaHei UI",system-ui,sans-serif;
+    height:100vh; display:flex; overflow:hidden;
+  }
+  /* ---------- 侧栏 ---------- */
+  aside{
+    width:230px; flex-shrink:0; background:var(--bg2); border-right:1px solid var(--line);
+    padding:20px 12px; overflow-y:auto;
+  }
+  .logo{display:flex;align-items:center;gap:11px;padding:0 10px 22px}
+  .taichi{width:40px;height:40px;flex-shrink:0;border-radius:50%;
+    background:conic-gradient(#f2e8d8 0 50%, #2e2721 50% 100%);position:relative;
+    box-shadow:0 0 0 1px var(--line2)}
+  .taichi::after{content:"";position:absolute;inset:0;margin:auto;width:16px;height:16px;
+    border-radius:50%;background:var(--gold);top:2px;box-shadow:0 20px 0 var(--gold)}
+  .logo h1{font-size:16px;font-weight:500;letter-spacing:.5px}
+  .logo span{display:block;font-size:11px;color:var(--faint);letter-spacing:2px}
+
+  .nav{display:flex;flex-direction:column;gap:3px;margin-bottom:22px}
+  .nav button{
+    display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;
+    background:none;border:0;border-radius:8px;color:var(--muted);cursor:pointer;
+    font:inherit;font-size:14px;text-align:left;transition:.15s;
+  }
+  .nav button:hover{background:var(--surface2);color:var(--text)}
+  .nav button.on{background:rgba(217,168,94,.14);color:var(--gold)}
+  .nav .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+  .nav .n{margin-left:auto;font-size:12px;color:var(--faint)}
+
+  .side-t{font-size:11px;color:var(--faint);letter-spacing:2px;padding:0 12px 8px}
+  .chip{
+    display:inline-block;margin:0 5px 6px 0;padding:4px 10px;font-size:12px;
+    background:var(--surface);border:1px solid var(--line);border-radius:20px;
+    color:var(--muted);cursor:pointer;transition:.15s;
+  }
+  .chip:hover{border-color:var(--gold);color:var(--gold)}
+
+  .up{margin:26px 8px 0;padding:14px;border:1px dashed var(--line2);border-radius:10px}
+  .up h4{font-size:13px;font-weight:500;margin-bottom:6px}
+  .up p{font-size:11px;color:var(--faint);line-height:1.5;margin-bottom:9px}
+  .up label{display:block;padding:7px;text-align:center;background:var(--gold);color:#1a1410;
+    border-radius:7px;cursor:pointer;font-size:13px;font-weight:500}
+  .up label:hover{background:#e6b877}
+  #file{display:none}
+
+  /* ---------- 主区 ---------- */
+  main{flex:1;display:flex;flex-direction:column;min-width:0}
+  header{display:flex;align-items:center;gap:16px;padding:18px 26px 14px;border-bottom:1px solid var(--line)}
+  header h2{font-size:19px;font-weight:500}
+  .cnt{font-size:12px;color:var(--faint)}
+  .search{
+    margin-left:auto;width:260px;padding:8px 14px;background:var(--surface);
+    border:1px solid var(--line);border-radius:20px;color:var(--text);font:inherit;font-size:13px;outline:0;
+  }
+  .search:focus{border-color:var(--gold)}
+
+  .table{flex:1;overflow-y:auto;padding:0 12px 150px}
+  .thead,.row{display:grid;grid-template-columns:44px 1fr 150px 160px 96px 76px 64px;
+    align-items:center;gap:12px;padding:9px 14px;border-radius:7px}
+  .thead{position:sticky;top:0;background:var(--bg);z-index:2;font-size:12px;color:var(--faint);
+    border-bottom:1px solid var(--line);border-radius:0;padding-top:14px}
+  .row{cursor:pointer;transition:.12s}
+  .row:hover{background:var(--surface)}
+  .row.playing{background:rgba(217,168,94,.13)}
+  .row.playing .idx{color:var(--gold)}
+  .idx{color:var(--faint);font-size:13px;text-align:center}
+  .t{min-width:0}
+  .t b{display:block;font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .t i{font-style:normal;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+  .mut{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dur{font-size:12px;color:var(--faint);text-align:right}
+  .badge{font-size:11px;padding:2px 8px;border-radius:10px;text-align:center;white-space:nowrap}
+  .b-on{background:rgba(90,138,94,.18);color:#8fc491}
+  .b-lo{background:rgba(61,111,158,.18);color:#7fb0d8}
+  .b-no{background:rgba(120,105,90,.15);color:var(--faint)}
+  .act{font-size:12px;color:var(--faint);text-align:center;cursor:pointer}
+  .act:hover{color:var(--gold)}
+  .empty{padding:70px 20px;text-align:center;color:var(--faint);font-size:13px}
+  .del{
+    width:26px;height:26px;border-radius:6px;border:1px solid var(--line2);
+    background:none;color:var(--faint);cursor:pointer;font-size:13px;line-height:1;
+    display:inline-flex;align-items:center;justify-content:center;transition:.15s;
+  }
+  .del:hover{border-color:var(--red);color:var(--red);background:rgba(200,80,60,.1)}
+  .del:disabled{opacity:.25;cursor:not-allowed}
+  .del:disabled:hover{border-color:var(--line2);color:var(--faint);background:none}
+
+  /* ---------- 播放条 ---------- */
+  footer{
+    position:fixed;left:230px;right:0;bottom:0;height:86px;background:rgba(28,23,19,.97);
+    border-top:1px solid var(--line);backdrop-filter:blur(14px);
+    display:flex;align-items:center;gap:20px;padding:0 26px;z-index:5;
+  }
+  .np{display:flex;align-items:center;gap:12px;width:250px;min-width:0}
+  .cv{width:48px;height:48px;border-radius:7px;object-fit:cover;background:var(--surface2);flex-shrink:0}
+  .np div{min-width:0}
+  .np b{display:block;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .np span{font-size:12px;color:var(--muted)}
+  .ctl{display:flex;align-items:center;gap:14px}
+  .btn{width:34px;height:34px;border-radius:50%;background:none;border:1px solid var(--line2);
+    color:var(--text);cursor:pointer;font-size:14px;display:flex;align-items:center;
+    justify-content:center;transition:.15s}
+  .btn:hover{border-color:var(--gold);color:var(--gold)}
+  .btn.p{width:44px;height:44px;background:var(--gold);color:#1a1410;border:0;font-size:16px}
+  .mid{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+  .bar{height:4px;background:var(--surface2);border-radius:3px;cursor:pointer;position:relative}
+  .bar .f{height:100%;background:var(--gold);border-radius:3px;width:0}
+  .tm{display:flex;justify-content:space-between;font-size:11px;color:var(--faint)}
+  .vol{width:96px}
+</style>
+</head>
+<body>
+
+<aside>
+  <div class="logo">
+    <div class="taichi"></div>
+    <div><h1>朝鲜族音乐</h1><span>ETHNIC MUSIC</span></div>
+  </div>
+
+  <nav class="nav">
+    <button class="on" data-view="all"><span class="dot"></span>全部歌曲<span class="n" id="n-all">–</span></button>
+    <button data-view="online"><span class="dot"></span>在线可播<span class="n" id="n-online">–</span></button>
+    <button data-view="local"><span class="dot"></span>本地音频<span class="n" id="n-local">–</span></button>
+    <button data-view="playable"><span class="dot"></span>可播放<span class="n" id="n-play">–</span></button>
+  </nav>
+
+  <div class="side-t">民乐关键词</div>
+  <div id="chips"></div>
+
+  <div class="up">
+    <h4>添加音乐</h4>
+    <p>上传音频文件，文件名包含歌名即可自动关联曲库</p>
+    <label for="file">选择音频文件</label>
+    <input type="file" id="file" multiple accept="audio/*">
+    <div id="upmsg" style="font-size:11px;margin-top:8px;color:var(--faint)"></div>
+  </div>
+</aside>
+
+<main>
+  <header>
+    <h2 id="ttl">全部歌曲</h2>
+    <span class="cnt" id="cnt"></span>
+    <input class="search" id="q" placeholder="搜索歌曲 / 歌手 / 专辑">
+  </header>
+  <div class="table">
+    <div class="thead">
+      <div>#</div><div>歌曲</div><div>歌手</div><div>专辑</div>
+      <div style="text-align:right">时长</div><div style="text-align:center">音源</div>
+      <div style="text-align:center">操作</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+</main>
+
+<footer>
+  <div class="np">
+    <img class="cv" id="cv" src="" alt="">
+    <div><b id="nt">未在播放</b><span id="ns">选择一首开始</span></div>
+  </div>
+  <div class="ctl">
+    <button class="btn" id="prev">◀◀</button>
+    <button class="btn p" id="play">▶</button>
+    <button class="btn" id="next">▶▶</button>
+  </div>
+  <div class="mid">
+    <div class="bar" id="bar"><div class="f" id="fill"></div></div>
+    <div class="tm"><span id="cur">00:00</span><span id="dur">00:00</span></div>
+  </div>
+  <input type="range" class="vol" id="vol" min="0" max="100" value="80">
+</footer>
+
+<audio id="au"></audio>
+
+<script>
+const $ = s => document.querySelector(s);
+let view = 'all', q = '', rows = [], cur = -1;
+
+const TITLES = {all:'全部歌曲', online:'在线可播', local:'本地音频', playable:'可播放'};
+
+function fmt(s){
+  if(!s) return '--:--';
+  s = Math.floor(s);
+  const m = String(Math.floor(s/60)).padStart(2,'0');
+  return m + ':' + String(s%60).padStart(2,'0');
+}
+
+async function load(){
+  const r = await fetch(`/api/tracks?view=${view}&q=${encodeURIComponent(q)}`);
+  const d = await r.json();
+  rows = d.tracks;
+  $('#cnt').textContent = d.count + ' 首';
+  $('#n-all').textContent = d.total;
+  $('#n-online').textContent = d.stats.online;
+  $('#n-local').textContent = d.stats.local;
+  $('#n-play').textContent = d.stats.online + d.stats.local;
+  render();
+}
+
+function render(){
+  const box = $('#rows');
+  if(!rows.length){
+    box.innerHTML = '<div class="empty">没有匹配的曲目<br><br>可从左侧「添加音乐」上传音频</div>';
+    return;
+  }
+  box.innerHTML = rows.map((t,i) => {
+    const badge = t.local_file ? '<span class="badge b-lo">本地</span>'
+               : t.online_url ? '<span class="badge b-on">在线</span>'
+               : '<span class="badge b-no">缺音源</span>';
+    return `<div class="row${i===cur?' playing':''}" data-i="${i}">
+      <div class="idx">${i+1}</div>
+      <div class="t"><b>${esc(t.title)}</b><i>${esc(t.ext||'')} ${t.file_size?esc(t.file_size):''}</i></div>
+      <div class="mut">${esc(t.singers)}</div>
+      <div class="mut">${esc(t.album)}</div>
+      <div class="dur">${t.duration||fmt(t.duration_s)}</div>
+      <div style="text-align:center">${badge}</div>
+      <div style="text-align:center"><button class="del" data-del="${esc(t.local_file||'')}"
+        title="${t.local_file?'删除本地音频':'该曲目无本地文件'}" ${t.local_file?'':'disabled'}>✕</button></div>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.row').forEach(r =>
+    r.onclick = () => play(+r.dataset.i));
+  box.querySelectorAll('[data-del]').forEach(b => {
+    if(!b.dataset.del) return;
+    b.onclick = e => { e.stopPropagation(); del(b.dataset.del); };
+  });
+}
+
+async function del(name){
+  if(!confirm(`确定删除本地音频？\n\n${name}\n\n该曲目的「本地」标记会消失；`
+    + `若它同时有可用在线音源，删除后仍可在线播放。`)) return;
+  const r = await fetch('/api/local-file/delete?name=' + encodeURIComponent(name),
+    {method:'POST'});
+  const d = await r.json();
+  if(d.ok){
+    if(cur >= 0){ $('#au').pause(); cur = -1; $('#nt').textContent='未在播放'; }
+    load();
+  } else alert('删除失败');
+}
+
+function esc(s){
+  return String(s??'').replace(/[&<>"]/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function play(i){
+  const t = rows[i];
+  if(!t) return;
+  if(!t.local_file && !t.online_url){
+    alert('该曲目暂无可用音源，请上传本地音频');
+    return;
+  }
+  cur = i;
+  const au = $('#au');
+  au.src = `/api/play/${encodeURIComponent(t.id)}`;
+  au.play().catch(()=>{});
+  $('#nt').textContent = t.title;
+  $('#ns').textContent = t.singers;
+  $('#cv').src = t.cover_url || '';
+  render();
+}
+
+$('#play').onclick = () => {
+  const au = $('#au');
+  if(cur < 0){ if(rows.length) play(0); return; }
+  au.paused ? au.play() : au.pause();
+};
+$('#prev').onclick = () => play(Math.max(0, cur-1));
+$('#next').onclick = () => play(Math.min(rows.length-1, cur+1));
+
+const au = $('#au');
+au.onplay  = () => $('#play').textContent = '❚❚';
+au.onpause = () => $('#play').textContent = '▶';
+au.ontimeupdate = () => {
+  if(!au.duration) return;
+  $('#fill').style.width = (au.currentTime/au.duration*100) + '%';
+  $('#cur').textContent = fmt(au.currentTime);
+};
+au.onloadedmetadata = () => {
+  const t = rows[cur];
+  const total = (t && t.duration_s) ? t.duration_s : au.duration;
+  $('#dur').textContent = fmt(total);
+  if(t && t.duration_s && Math.abs(au.duration - t.duration_s) > 2)
+    $('#dur').textContent = fmt(au.duration);
+};
+au.onended = () => $('#next').click();
+au.onerror = () => { if(cur>=0) alert('播放失败：音源不可用'); };
+
+$('#bar').onclick = e => {
+  if(!au.duration) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  au.currentTime = (e.clientX - r.left) / r.width * au.duration;
+};
+$('#vol').oninput = e => au.volume = e.target.value/100;
+
+let timer;
+$('#q').oninput = e => {
+  q = e.target.value;
+  clearTimeout(timer);
+  timer = setTimeout(load, 250);
+};
+
+document.querySelectorAll('.nav button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.nav button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    view = b.dataset.view;
+    $('#ttl').textContent = TITLES[view];
+    cur = -1;
+    load();
+  };
+});
+
+$('#file').onchange = async e => {
+  const fd = new FormData();
+  for(const f of e.target.files) fd.append('audio', f);
+  $('#upmsg').textContent = '上传中…';
+  const r = await fetch('/api/upload', {method:'POST', body:fd});
+  const d = await r.json();
+  let msg = `已保存 ${d.saved.length} 个文件，自动匹配 ${d.matched.length} 首`;
+  if(d.unmatched.length) msg += `，${d.unmatched.length} 个未匹配曲库`;
+  $('#upmsg').textContent = msg;
+  e.target.value = '';
+  load();
+};
+
+fetch('/api/tracks').then(r=>r.json()).then(d => {
+  const kws = ['阿里郎','盘索里','延边','民谣','农乐','长鼓','扇子','打令','阿里那','阿里郎'];
+  $('#chips').innerHTML = kws.map(k =>
+    `<span class="chip" data-k="${k}">${k}</span>`).join('');
+  document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    $('#q').value = c.dataset.k;
+    q = c.dataset.k;
+    load();
+  });
+  load();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# PyInstaller
+build/
+dist/
+
+# 构建产物：安装包体积大（~40MB），走 GitHub Releases 分发，不入库
+ChaoxianzuMusic_Setup.exe
+*.spec.bak
+
+# 一次性调试脚手架（曾用于排查 frozen 崩溃）
+Bisect*.spec
+SpyExe.spec
+MiniGui.spec
+
+# 用户本地音频（体积大且属个人版权内容，不入库）
+music/*
+!music/.gitkeep
+
+# 运行期状态
+data/alive.json
+*.log
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
